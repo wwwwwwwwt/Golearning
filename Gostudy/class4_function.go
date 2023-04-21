@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-04-21 10:19:28
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-04-21 13:24:26
+ * @LastEditTime: 2023-04-21 15:49:25
  * @FilePath: /Golearning/Gostudy/class4_function.go
  */
 package main
@@ -38,8 +38,13 @@ func foo2(a string, b int) (c int, d int) {
 
 }
 
-func swap(a string, b string) (string, string) {
-	return b, a
+func swap(a *string, b *string) {
+	temp := *a
+
+	*a = *b
+
+	*b = temp
+
 }
 
 func main() {
@@ -53,7 +58,7 @@ func main() {
 
 	x, y := "abc", "bcd"
 
-	x, y = swap(x, y)
+	swap(&x, &y)
 
 	fmt.Println("x = ", x, "y = ", y)
 
