@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-03-31 10:16:52
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-04-21 13:25:32
+ * @LastEditTime: 2023-04-22 00:04:40
  * @FilePath: /Golearning/README.md
 -->
 # Golearning
@@ -179,12 +179,16 @@ func main() {
 ## class5. init函数和import导包路径
 
 * 使用go mod管理包
+
+```
+go env -w GO111MODULE=on
+```
+
 * 首先我们需要初始化一个go.mod，使用
 
 ```go
 go mod init test
 # test可以是任意的名称
-
 ```
 
 * 然后我们引入模块的时候，以test(初始化时定义)开头，然后接模块路径，比如
@@ -201,3 +205,257 @@ import "test/module/moduleA"
 1. 进入包后首先会找这个包依赖的包，依次递归到最深的包
 2. 依次找到它的const 全局变量等，最后找到它的init函数，执行
 3. 包内的对外方法首字母一定要大写开头，小写开头对应着私有方法对外不可见。
+
+## class 6. 导入包的技巧
+
+```go
+
+package main
+
+import (
+	_ "class5/lib1" // 匿名导入包，表示不使用这个包的方法，只让这个包内的init（）完成初始化
+	. "class5/lib2"  // 表示将lib2 内的作用域完全导入本函数作用域，可以在本作用域直接使用lib2中的函数方法， 但不推荐可能会有函数重名
+	aa "fmt" // 给包起别名。 fmt.方法 可以变为 aa.方法
+)
+
+func main() {
+
+	//lib1.Lib1test()
+	Lib2test()
+	aa.Println("hello")
+}
+
+
+```
+
+
+## class 7. go中的指针与按指针传参
+
+* 基本和c++一样,但基本类型没有按引用传递参数
+
+```go
+
+package main
+
+import (
+	"fmt"
+)
+
+func changeval(a *int) {
+	*a = 20
+}
+
+func swap(a *int, b *int) {
+	temp := *a
+	*a = *b
+	*b = temp
+}
+
+func main() {
+
+	var a int = 10
+	fmt.Println("a = ", a, "&a = ", &a)
+
+	changeval(&a)
+
+	fmt.Println("a = ", a, "&a = ", &a)
+
+	fmt.Println("-------swap val --------")
+
+	x, y := 100, 200
+
+	fmt.Println("x = ", x, "y = ", y)
+
+	swap(&x, &y)
+
+	fmt.Println("x = ", x, "y = ", y)
+}
+
+输出：
+a =  10 &a =  0xc0000ba000
+a =  20 &a =  0xc0000ba000
+-------swap val --------
+x =  100 y =  200
+x =  200 y =  100
+
+```
+
+## class 8. defer的调用机制
+
+* defer + 函数或语句，在函数完全结束时（在return之后）触发
+* 多个defer 一起使用时类似压栈，先声明的defer先被压进栈，后触发
+
+```go
+
+package main
+
+import (
+	"fmt"
+)
+
+func foo(a int) int {
+	fmt.Println("main end ", a)
+	return 0
+}
+
+func foo2() int {
+	defer foo(1)
+	return foo(2)
+}
+
+func main() {
+	/*defer foo(1)
+	defer foo(2)
+	defer foo(3) */
+
+	foo2()
+
+}
+
+输出：
+main end  2
+main end  1
+
+```
+
+## class 9. 固定数组与动态数组
+
+1. 固定数组
+
+```go
+
+var arr1 [10] int // 十个默认值0
+
+arr2 := [10]int{1,2,3,4} // 1234 + 6个0
+
+
+
+func foo(a [10]int)
+注意这种数组传参为按值传递
+
+func foo( a[]int)为按引用传递
+
+使用时
+
+foo(arr2[起始位置:终止位置])
+
+[起始位置，终止位置) 左闭右开不包含终止位置
+
+表示将起始位置到终止位置之前的那个位置切片成一个数组传入函数
+
+```
+
+2. 动态数组
+
+```go
+
+a := []int{1,2,3,4}
+
+```
+
+## class10. 声明slice数组的四种方法和判断slice是否为空
+
+```go
+
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+
+	//方法1 声明长度为3的切片数组
+
+	slice1 := []int{1, 2, 3}
+
+	fmt.Printf("len = %d, slice = %v\n", len(slice1), slice1)
+
+	// 方法2 声明长度为0的切片数组,没有分配容量，可以通过make([]类型，长度)进行分配空间，值为默认值
+
+	var slice2 []int
+
+	slice2 = make([]int, 4)
+	fmt.Printf("len = %d, slice = %v\n", len(slice2), slice2)
+
+	//方法3， 通过var 声明
+
+	var slice3 []int = make([]int, 5)
+	fmt.Printf("len = %d, slice = %v\n", len(slice3), slice3)
+
+	// 方法4， 动态直接初始化，分配空间
+
+	slice4 := make([]int, 6)
+	fmt.Printf("len = %d, slice = %v\n", len(slice4), slice4)
+
+	// 判断是否为空，就是判断是否为nil
+	var a []int
+
+	if a == nil {
+		fmt.Println("nil")
+	} else { // else 要和右括号在一行
+		fmt.Println("not nil")
+	}
+}
+
+```
+
+## class 11. slice的切片追加和截取
+
+* 类似vector底层动态扩容的过程，底层有size 和 cap 两个成员，size超过了cap的大小 cap容量就会翻倍。
+
+* 使用切片名 = append（切片名，值），将这个值追加进切片数组，类似vector中的push_back
+```go
+
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+
+	a := make([]int, 3, 5)
+
+	fmt.Printf("len = %d, cap = %d, slice = %v\n", len(a), cap(a), a)
+
+	a = append(a, 2)
+	fmt.Printf("len = %d, cap = %d, slice = %v\n", len(a), cap(a), a)
+
+	a = append(a, 2)
+	fmt.Printf("len = %d, cap = %d, slice = %v\n", len(a), cap(a), a)
+
+	a = append(a, 2)
+	fmt.Printf("len = %d, cap = %d, slice = %v\n", len(a), cap(a), a)
+}
+
+
+```
+
+2. 切片的截取
+
+* 使用时 s1 = arr2[起始位置:终止位置]
+* [起始位置，终止位置) 左闭右开不包含终止位置
+* 注意，此时s1指向的地址就是arr2的地址，s1的修改会影响arr2
+* 如果想完全分开，就需要分配一个空slice数组s2, 然后使用copy(s2, arr2[:])完全复制过去
+
+```go
+
+s2 := a[3:6]
+s2[0] = 100
+
+输出：
+len = 3, cap = 7, slice = [100 2 2]
+len = 6, cap = 10, slice = [0 0 0 100 2 2]
+---------------
+s2 := make([]int, 3)
+
+copy(s2, a[3:6])
+
+s2[0] = 100
+
+输出：
+len = 3, cap = 3, slice = [100 2 2]
+len = 6, cap = 10, slice = [0 0 0 2 2 2]
+这样修改s2不会影响到a数组
+```
