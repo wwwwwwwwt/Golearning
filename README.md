@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-03-31 10:16:52
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-04-22 17:07:33
+ * @LastEditTime: 2023-04-23 09:47:25
  * @FilePath: /Golearning/README.md
 -->
 # Golearning
@@ -461,7 +461,7 @@ len = 6, cap = 10, slice = [0 0 0 2 2 2]
 ```
 
 
-## class12. map的三种定义方式
+## class 12. map的三种定义方式
 
 ```go
 
@@ -495,6 +495,112 @@ len = 6, cap = 10, slice = [0 0 0 2 2 2]
 	}
 
 	fmt.Printf("map = %v\n", mp3)
+
+
+```
+
+## class 13. map的基本使用方式，增删改查
+
+
+```go
+
+package main
+
+func changemap(a map[string]string) { // 注意mao传参是按引用传参，动态slice也是
+	a["italy"] = "bcd"
+}
+
+func main() {
+
+	citymap := make(map[string]string)
+
+	// 添加元素
+	citymap["China"] = "beijing"
+	citymap["USA"] = "NK"
+	citymap["UK"] = "london"
+
+	//查询这个元素在不在map中
+	if val, ok := citymap["JAPAN"]; ok {
+		println("Japan city is ", val)
+	} else {
+		println("japan is nil")
+	}
+
+	if val, ok := citymap["China"]; ok != false {
+		println(val, "is the city of China")
+	} else {
+		println("nil")
+	}
+
+	// 遍历元素
+	for key, val := range citymap {
+		println("country is ", key, "city is", val)
+	}
+
+	println("-----------------------")
+
+	//删除键
+	delete(citymap, "UK")
+	for key, val := range citymap {
+		println("country is ", key, "city is", val)
+	}
+
+	//修改键
+	citymap["USA"] = "abc"
+
+	//按引用传参
+	changemap(citymap)
+	for key, val := range citymap {
+		println("country is ", key, "city is", val)
+	}
+
+}
+
+```
+]
+
+## class 14. 结构体struct的基本用法
+
+
+```go
+
+package main
+
+import "fmt"
+
+type myint int
+
+type book struct {
+	name string
+	auth string
+}
+
+func changebook(a *book) { // 注意结构体 需要传入指针能修改内容
+	a.name = "c++"
+}
+
+func main() {
+
+	var a myint = 5
+
+	println("a = ", a)
+
+	// 初始化方法1，声明再初始化
+	var book1 book
+	book1.name = "go"
+	book1.auth = "ztw"
+
+	fmt.Printf("book is %v\n", book1)
+
+	changebook(&book1)
+
+	fmt.Printf("book is %v\n", book1)
+
+	//初始化方法2， 直接初始化
+	b := book{"go", "ztw"}
+
+	fmt.Printf("b is%v\n", b)
+}
 
 
 ```
