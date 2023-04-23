@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-03-31 10:16:52
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-04-23 20:37:26
+ * @LastEditTime: 2023-04-24 00:28:56
  * @FilePath: /Golearning/README.md
 -->
 # Golearning
@@ -601,6 +601,109 @@ func main() {
 
 	fmt.Printf("b is%v\n", b)
 }
+
+
+```
+## class 15. Go语言的class是基于struct 和 struct 对象的方法来实现的
+
+* 特别注意：方法的首字母大写是对包外可见的方法类似public，小写的方法只在包内可见类似private
+
+* 类的方法需要传入类对象的指针，否则传入的是副本，不能修改类的成员变量
+
+```go
+package main
+
+import "fmt"
+
+type Hero struct {
+	Name  string
+	Ad    int
+	Level int
+}
+
+func (t *Hero) GetName() string { // t 为类对象别名
+	return t.Name
+}
+func (t *Hero) Show() {
+	fmt.Printf("name: %s ad: %d Level: %d\n", t.Name, t.Ad, t.Level)
+}
+
+func (t *Hero) SetName(newname string) { // 修改类成员需要传入对象指针，不传指针的话，是传入该方法对象的拷贝
+	t.Name = newname
+}
+
+func main() {
+
+	hero := Hero{"ztw", 99999, 99999}
+	hero2 := Hero{Name: "wgl", Ad: 1000, Level: 1000}
+
+	hero.Show()
+
+	hero.SetName("zzzztw")
+
+	hero.Show()
+
+	hero2.Show()
+}
+
+
+```
+
+
+## class 16. 类的继承1，这种继承实现不了多态
+
+```go
+
+package main
+
+import "fmt"
+
+type Human struct { // 定义父类
+	name string
+	sex  string
+}
+
+type Superman struct { // 定义子类，直接把父类放在子类
+	Human
+	level int
+}
+
+func (t *Human) Eat() {
+	fmt.Println("Human.Eat()...")
+}
+
+func (t *Human) Walk() {
+	fmt.Println("Human.Walk()...")
+}
+
+func (t *Superman) Eat() {
+	fmt.Println("Superman.Eat()...")
+}
+
+func (t *Superman) Fly() {
+	fmt.Println("Superman.Fly()...")
+}
+
+func main() {
+
+	a := Human{name: "ztw", sex: "male"}
+
+	a.Eat()
+	a.Walk()
+
+	// 第一种声明子类继承的方法
+	b := Superman{Human{"ztw", "male"}, 99999}
+
+	// 第二种，直接.变量再赋值
+	/*
+		b.name = "ztw"
+		b.sex = "male"
+		b.level = 99999*/
+	b.Eat()  //子类重定义父类的方法
+	b.Fly()  // 子类自己的新方法
+	b.Walk() // 父类的方法
+}
+
 
 
 ```
