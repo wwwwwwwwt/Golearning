@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-03-31 10:16:52
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-04-24 10:43:39
+ * @LastEditTime: 2023-04-24 21:52:35
  * @FilePath: /Golearning/README.md
 -->
 # Golearning
@@ -708,7 +708,7 @@ func main() {
 
 ```
 
-## class 17. 利用interface实现多态
+## class 17. 利用interface实现多态，类似抽象类
 
 * interface本身是一个指针
 * interface接口类似抽象类，子类需要实现interface内定义的所有函数，就相当于继承
@@ -784,7 +784,7 @@ func main() {
 ```
 
 
-## class 18. 万能类型空接口 interface{}
+## class 18. 万能类型空接口 interface{}类似多态
 * 类似泛型
 * 1.18version以后可以使用any 代替interface{}
 * int, string, float32, float64, struct内部都实现了interface{}接口
@@ -834,10 +834,314 @@ func main() {
 
 	b := "5"
 
-	c := myfunc(b).(*a) // 后面是强转类型
+	c := myfunc(b).(*a) // 后面是断言赋值可以用来强制转换
 
 	fmt.Printf("type is %T, c is %s\n", c, c.name)
 
+}
+
+
+
+```
+
+## class 19. 变量的内置类型pair结构
+
+* 变量中包括：type,val
+* type分为static type 和 dynamic type, 动态类型指的是interface所指向的类型
+
+```go
+
+package main
+
+import "fmt"
+
+// 定义接口类型
+type Reader interface {
+	Readbook()
+}
+type Writer interface {
+	Writebook()
+}
+
+// 具体类型,实现了接口类型Reader和Writer的方法，就相当于多重继承
+type book struct {
+}
+
+func (t *book) Readbook() {
+	fmt.Println("reading book...")
+}
+
+func (t *book) Writebook() {
+	fmt.Println("Writing book...")
+}
+
+func main() {
+
+	// b: pair<type: book, val:book的地址>
+	b := book{}
+
+	//reader: pair<type: 接口类型的type为指向对象的type，这里为book， val：book的地址>
+	var reader Reader
+	reader = &b
+	reader.Readbook()
+
+	//writer: 对另一个接口类型reader进行类型断言
+	//因为 book也重新定义了writer的全部函数，所以writer也可以指向book，类似强转
+	var writer Writer
+	writer = reader.(Writer)
+	//	writer = &b
+	writer.Writebook()
+
+}
+
+
+```
+
+## class 20. reflect反射机制用法
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+func reflectNum(arg interface{}) {
+	// 获取类型和值，reflect.TypeOf(), reflect.ValueOf()
+	fmt.Println("type: ", reflect.TypeOf(arg))
+	fmt.Println("val : ", reflect.ValueOf(arg))
+}
+
+type User struct {
+	Id   int
+	Name string
+	Age  int
+}
+
+func (t User) Call() {
+	fmt.Println("user is call...")
+	fmt.Printf("%v\n", t)
+}
+
+func DofieldandMethod(input interface{}) {
+
+	// 获取input的type
+	inputType := reflect.TypeOf(input)
+	fmt.Println("input type is", inputType)
+
+	//获取input的val
+	inputval := reflect.ValueOf(input)
+	fmt.Println("input val is", inputval)
+
+	//通过type获取里面的字段
+	//1. 获取interface{}中的reflect type类型中的.NumField， 进行遍历
+	//2. 得到每个type类型的Field(i)，是数据类型
+	//3. 通过每个val类型中的Filed(i)中的Interface()接口得到val
+
+	for i := 0; i < inputType.NumField(); i++ { // 注意，获取字段时需要结构体内的变量首字母大写，否则不能获取到类似private
+		field := inputType.Field(i)
+		val := inputval.Field(i).Interface()
+
+		fmt.Printf("%s: %v = %v\n", field.Name, field.Type, val)
+	}
+
+	// 通过type获得里面的方法并调用
+
+	for i := 0; i < inputType.NumMethod(); i++ {
+		method := inputType.Method(i)
+
+		fmt.Printf("%s: %v\n", method.Name, method.Type)
+
+	}
+
+}
+
+func main() {
+
+	var num float64 = 1.2345
+	reflectNum(num)
+
+	user := User{1, "ztw", 24}
+	DofieldandMethod(user)
+
+}
+
+输出：
+
+type:  float64
+val :  1.2345
+input type is main.User
+input val is {1 ztw 24}
+Id: int = 1
+Name: string = ztw
+Age: int = 24
+Call: func(main.User)
+```
+
+
+## class 21. go中通过反射解析结构体标签Tag
+
+* 传入对象指针就用 reflect.TypeOf().Elem()
+* 传入对象本身就用 reflect.TypeOf()
+* 通过Field().  获得一系列参数
+
+```go
+
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+type resume struct {
+	Name string `info:"name" doc:"我的名字"` // 标签类似注释，可以通过反射得到
+	Sex  string `info:"sex"`
+}
+
+func findTag(str interface{}) {
+	t := reflect.TypeOf(str).Elem() // 传入指针用TypeOf().Elem
+
+	for i := 0; i < t.NumField(); i++ {
+		taginfo := t.Field(i).Tag.Get("info")
+		tagdoc := t.Field(i).Tag.Get("doc")
+		fmt.Println("info:", taginfo, "doc:", tagdoc)
+	}
+}
+
+func main() {
+
+	var re resume
+	findTag(&re)
+}
+
+
+```
+
+
+## class 22. 结构体标签再json中的应用
+
+* json包 ```"encoding/json"```
+* 序列化 Marshal struct -->json 反序列化 Unmarshal json ---> struct, 反序列化时，传入struct对象的指针
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Movie struct {
+	Name  string   `json:"title"`
+	Year  int      `json:"year"`
+	Price int      `json:"rmb"`
+	Actor []string `json:"actors"`
+}
+
+func main() {
+
+	movie := Movie{"喜剧之王", 2000, 10, []string{"周星驰", "张柏芝"}}
+
+	// 编码的过程， struct ---> json
+	jsonstr, err := json.Marshal(movie)
+	if err != nil {
+		fmt.Println("json marshal is error")
+		return
+	} else {
+		fmt.Printf("jsonstr = %s\n", jsonstr)
+	}
+
+	// 解码的过程， json ---> struct
+
+	myMovie := Movie{}                      // 建立结构体接收
+	err = json.Unmarshal(jsonstr, &myMovie) // 以指针传入
+
+	fmt.Printf("%v\n", myMovie)
+}
+
+
+
+```
+
+
+##  class 23. 创建goroutine
+
+* 通过go 关键字
+
+```go
+
+package main
+
+import (
+	"fmt"
+	"runtime"
+	"time"
+)
+
+func foo() {
+	fmt.Println("hhhhhhh")
+}
+
+func main() {
+
+	// 匿名函数执行
+	go func() {
+		defer fmt.Println("A defer")
+
+		func() {
+			defer fmt.Println("B defer")
+			runtime.Goexit() //退出当前协程，直接退出，到执行defer那一步 / return是退出当前函数，还会执行上层函数体的后续
+			fmt.Println("B")
+		}()
+		fmt.Println("A")
+	}()
+
+	// 有名函数执行
+	go foo()
+
+	for {
+		time.Sleep(1 * time.Second)
+	}
+}
+
+```
+
+
+## class 24. channel的基本定义与使用，channel用于两个routine的数据传递管道
+
+* channel 有同步两个线程的作用，类似c++ promise
+* c := make(chan Type)建立channel，type指定传递类型，无缓冲
+* c := make(chan Type, capicity) 建立有缓冲的channel
+* 子线程 c <- 传递的值
+* 主线程 num := <-c传递给主线程值
+* 类似管道，一边进一边出
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+
+	c := make(chan int)
+
+	go func() {
+		defer fmt.Println("goroutine is finish") // defer 会在c <-666之后执行
+		c <- 666                                 // 在此处就把值通过管道传递给了主线程num，在此处同步，然后接下来继续执行下面的
+		time.Sleep(1 * time.Second)
+	}()
+
+	if num := <-c; num != 0 {
+		fmt.Println("num is ", num)
+	}
+	//fmt.Println("num is", num)
+
+	time.Sleep(2 * time.Second)
 }
 
 
