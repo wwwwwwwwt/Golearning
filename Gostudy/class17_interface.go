@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-04-24 00:29:20
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-04-24 00:37:13
+ * @LastEditTime: 2023-04-24 10:09:27
  * @FilePath: /Golearning/Gostudy/class17_interface.go
  */
 package main

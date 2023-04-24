@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-03-31 10:16:52
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-04-24 00:28:56
+ * @LastEditTime: 2023-04-24 10:43:39
  * @FilePath: /Golearning/README.md
 -->
 # Golearning
@@ -702,6 +702,142 @@ func main() {
 	b.Eat()  //子类重定义父类的方法
 	b.Fly()  // 子类自己的新方法
 	b.Walk() // 父类的方法
+}
+
+
+
+```
+
+## class 17. 利用interface实现多态
+
+* interface本身是一个指针
+* interface接口类似抽象类，子类需要实现interface内定义的所有函数，就相当于继承
+* 使用时将interface绑定到子类对象的地址上，就可以多态的使用函数了
+
+
+```go
+package main
+
+import "fmt"
+
+type Animal interface {
+	Sleep()
+	Getcolor() string
+	Gettype() string
+}
+
+type Cat struct { // 继承基类接口animal 不需要写上，只需要定义animal中所有的函数即可
+	color string
+	kind  string
+}
+
+func (t *Cat) Sleep() {
+	fmt.Println("Cat is sleeping.....")
+}
+
+func (t *Cat) Getcolor() string {
+	return t.color
+}
+
+func (t *Cat) Gettype() string {
+	return t.kind
+}
+
+type Dog struct {
+	color string
+	kind  string
+}
+
+func (t *Dog) Sleep() {
+	fmt.Println("Dog is sleeping.....")
+}
+
+func (t *Dog) Getcolor() string {
+	return t.color
+}
+
+func (t *Dog) Gettype() string {
+	return t.kind
+}
+
+func main() {
+	var p Animal
+
+	cat := Cat{"black", "cat"}
+
+	dog := Dog{"yellow", "dog"}
+	//使用cat的多态
+	p = &cat
+	p.Getcolor()
+	p.Gettype()
+	p.Sleep()
+
+	fmt.Println("-------------------")
+	//使用dog的多态
+	p = &dog
+	p.Getcolor()
+	p.Gettype()
+	p.Sleep()
+}
+
+
+```
+
+
+## class 18. 万能类型空接口 interface{}
+* 类似泛型
+* 1.18version以后可以使用any 代替interface{}
+* int, string, float32, float64, struct内部都实现了interface{}接口
+* 就可以用interface{}类型，引用任意的数据类型。
+* 类型断言机制，利用if 或 switch进行判断， 注意interface{}返回类型需要&
+
+```go
+
+package main
+
+import "fmt"
+
+//interface{}是万能数据类型，放在传参中实现泛型
+
+func myfunc(arg interface{}) interface{} {
+	fmt.Printf("arg is %T\n", arg)
+	fmt.Printf("arg is %v\n", arg)
+
+	// 给interface{}提供类型断言的机制，可以根据不同类型写不同业务,用于参数的传入传出
+	if val, ok := arg.(string); ok {
+		fmt.Println("arg is string", val)
+	} else {
+		fmt.Println("arg is not string")
+	}
+
+	switch arg.(type) {
+	case string:
+		return &a{
+			name: arg.(string),
+		}
+	default:
+		return "123"
+	}
+	return nil
+}
+
+type a struct {
+	name string
+}
+
+func main() {
+
+	book := a{"111"}
+	myfunc(book)
+
+	myfunc("123")
+
+	b := "5"
+
+	c := myfunc(b).(*a) // 后面是强转类型
+
+	fmt.Printf("type is %T, c is %s\n", c, c.name)
+
 }
 
 
