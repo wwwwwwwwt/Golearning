@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-04-24 20:58:26
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-04-24 21:48:43
+ * @LastEditTime: 2023-04-24 21:55:44
  * @FilePath: /Golearning/Gostudy/class24_use_channel.go
  */
 package main
@@ -19,7 +19,8 @@ func main() {
 	go func() {
 		defer fmt.Println("goroutine is finish") // defer 会在c <-666之后执行
 		c <- 666                                 // 在此处就把值通过管道传递给了主线程num，在此处同步，然后接下来继续执行下面的
-		time.Sleep(1 * time.Second)
+		//	time.Sleep(1 * time.Second)
+		fmt.Println("goroutine ing....")
 	}()
 
 	if num := <-c; num != 0 {

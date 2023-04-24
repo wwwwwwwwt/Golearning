@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-03-31 10:16:52
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-04-24 21:52:35
+ * @LastEditTime: 2023-04-24 21:55:13
  * @FilePath: /Golearning/README.md
 -->
 # Golearning
@@ -1112,7 +1112,7 @@ func main() {
 ## class 24. channel的基本定义与使用，channel用于两个routine的数据传递管道
 
 * channel 有同步两个线程的作用，类似c++ promise
-* c := make(chan Type)建立channel，type指定传递类型，无缓冲
+* c := make(chan Type)建立channel，type指定传递类型，无缓冲,无缓冲的channel当数据被放进管道时，数据没被拿走，这个channel会被锁住，直到数据被拿走
 * c := make(chan Type, capicity) 建立有缓冲的channel
 * 子线程 c <- 传递的值
 * 主线程 num := <-c传递给主线程值
