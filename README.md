@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-03-31 10:16:52
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-04-24 21:55:13
+ * @LastEditTime: 2023-04-25 13:38:41
  * @FilePath: /Golearning/README.md
 -->
 # Golearning
@@ -1144,6 +1144,173 @@ func main() {
 	time.Sleep(2 * time.Second)
 }
 
+```
+
+## class 25. 有缓存的channel
+
+* 有缓冲区的channel当channel内元素小于缓冲区cap大小时，不会发生阻塞，当元素达到上限时会阻塞
+
+```go
+定义
+c := make(chan int, 缓冲区大小)
+```
+
+* 示例
+```go
+
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+
+	c := make(chan int, 3)
+
+	fmt.Println("len c = ", len(c), "cap c =", cap(c))
+
+	go func() {
+		defer fmt.Println("子go程结束")
+		c <- 666
+		c <- 777
+		c <- 888
+		c <- 999 // 不写这一行无论主线程有没有取出元素，都会直接结束，写了这行主线程不取元素就会阻塞
+	}()
+
+	time.Sleep(1 * time.Second)
+
+	num1 := <-c
+	num2 := <-c
+	num3 := <-c
+
+	fmt.Println("1 :", num1, "2 :", num2, "3 :", num3)
+	time.Sleep(1 * time.Second)
+}
+输出
+len c =  0 cap c = 3
+1 : 666 2 : 777 3 : 888
+子go程结束
+
+```
+
+
+## class 26. 使用close关闭管道
+
+* 只有当你确实没有任何发送数据了，或者向现实的结束range循环时，一般才关闭channel
+* 向关闭的channel再次发送数据会报错
+* 关闭channel后还可以继续从channel缓存中接受数据
+* 当向nil channel（不使用make声明的channel变量）无论收发数据都会被阻塞，所以都应该使用make声明channel
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+
+	c := make(chan int)
+
+	go func() {
+		for i := 0; i < 4; i++ {
+			c <- i
+		}
+
+		close(c) // close 关闭一个管道，不写这行运行会报死锁的错误
+
+	}()
+
+	for {
+
+		if data, ok := <-c; ok {
+			fmt.Println(data)
+		} else {
+			break
+		}
+	}
+
+	fmt.Println("main finished")
+
+}
+
+```
+
+
+## class 27. channel和range
+
+* for date := range c 阻塞取出channel内数据，直到channel被关闭
+
+```go
+
+package main
+
+import "fmt"
+
+func main() {
+
+	c := make(chan int)
+
+	go func() {
+		for i := 0; i < 3; i++ {
+			c <- i
+		}
+		close(c)
+	}()
+
+	for data := range c { // 只要channel中有数据，就阻塞尝试取出，直到channel被关闭。channel一直不关闭会导致死锁
+		fmt.Println(data)
+	}
+
+}
+
+```
+
+## class 28. channel 和 select
+
+* select 类似c++中的select io多路复用，同时监控多个channel的可读可写,用法类似switch case
+* 注意逻辑，防止线程死锁
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+
+	c := make(chan int)
+	quit := make(chan int)
+	go func() {
+		x, y := 1, 1
+
+		for {
+			select {
+			case c <- x:
+				//x, y = y, x+y // 斐波那契数列
+				z := x
+				x = y
+				y = z + y
+			case <-quit:
+				return
+			}
+		}
+	}()
+
+	for i := 0; i < 10; i++ {
+		data := <-c
+
+		fmt.Println(data)
+	}
+	quit <- 0
+}
+
+
 
 
 ```
+
+## class 29. go modules工作模式
+
+导入包后
+go mod init + 名字或github地址
+go mod tidy
