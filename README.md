@@ -2,8 +2,8 @@
  * @Author: zzzzztw
  * @Date: 2023-03-31 10:16:52
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-04-25 13:38:41
- * @FilePath: /Golearning/README.md
+ * @LastEditTime: 2023-04-26 19:16:04
+ * @FilePath: /zhang/Golearning/README.md
 -->
 # Golearning
 
@@ -1201,6 +1201,8 @@ len c =  0 cap c = 3
 * 只有当你确实没有任何发送数据了，或者向现实的结束range循环时，一般才关闭channel
 * 向关闭的channel再次发送数据会报错
 * 关闭channel后还可以继续从channel缓存中接受数据
+* 关闭channel后，数据读完了，一直还可以再读数据，不会阻塞msg, ok := <-t.C， ok返回false，需要判断，否则如果外面嵌套for会死循环
+* 利用for msg := range t.C
 * 当向nil channel（不使用make声明的channel变量）无论收发数据都会被阻塞，所以都应该使用make声明channel
 
 ```go
@@ -1270,6 +1272,10 @@ func main() {
 
 * select 类似c++中的select io多路复用，同时监控多个channel的可读可写,用法类似switch case
 * 注意逻辑，防止线程死锁
+* 发现哪个 channel 有数据产生，就执行相应的 case 分支
+* 如果同时有多个 case 分支可以执行，则会随机选择一个
+* 如果一个 case 分支都不可执行，则 select 会一直等待
+
 
 ```go
 package main
@@ -1304,8 +1310,35 @@ func main() {
 	quit <- 0
 }
 
+```
 
 
+* 有优先级的select
+* 使用了嵌套的select，还组合使用了for循环和LABEL来实现题目的要求。上面的代码在外层select选中执行job2 := <-ch2时，进入到内层select循环继续尝试执行job1 := <-ch1,当ch1就绪时就会一直执行，否则跳出内层select。
+
+```go
+
+func worker2(ch1, ch2 <-chan int, stopCh chan struct{}) {
+	for {
+		select {
+		case <-stopCh:
+			return
+		case job1 := <-ch1:
+			fmt.Println(job1)
+		case job2 := <-ch2:
+		priority:
+			for {
+				select {
+				case job1 := <-ch1:
+					fmt.Println(job1)
+				default:
+					break priority
+				}
+			}
+			fmt.Println(job2)
+		}
+	}
+}
 
 ```
 
