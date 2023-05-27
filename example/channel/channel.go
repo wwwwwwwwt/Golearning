@@ -1,6 +1,16 @@
+/*
+ * @Author: zzzzztw
+ * @Date: 2023-05-27 09:06:48
+ * @LastEditors: Do not edit
+ * @LastEditTime: 2023-05-27 16:42:17
+ * @FilePath: /Golearning/example/channel/channel.go
+ */
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func main() {
 
@@ -24,4 +34,17 @@ func main() {
 	ch <- "456"
 
 	fmt.Println(<-ch, <-ch)
+
+	// 3. 通道同步
+
+	done := make(chan bool)
+	go func(done chan bool) {
+		fmt.Println("working...")
+		time.Sleep(1 * time.Second)
+		fmt.Println("finish working")
+		done <- true
+	}(done)
+
+	<-done
+
 }
