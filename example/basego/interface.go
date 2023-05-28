@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-05-26 14:14:28
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-05-26 14:22:36
+ * @LastEditTime: 2023-05-28 16:52:15
  * @FilePath: /Golearning/example/basego/interface.go
  */
 package main
@@ -44,6 +44,8 @@ func measure(g ge) {
 	fmt.Println(g.perim())
 
 }
+
+var _ ge = (*circle)(nil) // 验证派生类是否实现了抽象类所有方法
 
 func main() {
 
